@@ -1,0 +1,14 @@
+# Replace the example client ID from output.workload_identities.web.client_id.
+# Pods need serviceAccountName: web and label azure.workload.identity/use: "true".
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web
+  namespace: demo
+  annotations:
+    azure.workload.identity/client-id: EXAMPLE_APPLICATION_CLIENT_ID

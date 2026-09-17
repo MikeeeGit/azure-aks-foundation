@@ -1,0 +1,19 @@
+# Contract only: install a maintained controller and adapt its selector/ports.
+# Confirm the IP is free in this cluster's node subnet before applying.
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-internal-ingress
+  namespace: demo
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "10.81.0.20"
+spec:
+  type: LoadBalancer
+  selector:
+    app: example-ingress-controller
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
