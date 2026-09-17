@@ -1,0 +1,26 @@
+# Strategic-merge example; include in a reviewed application Kustomize overlay.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-demo
+  namespace: platform-demo
+spec:
+  template:
+    metadata:
+      labels:
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: platform-demo
+      containers:
+        - name: app
+          volumeMounts:
+            - name: ingress-certificate
+              mountPath: /mnt/secrets-store
+              readOnly: true
+      volumes:
+        - name: ingress-certificate
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: platform-demo-tls

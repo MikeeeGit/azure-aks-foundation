@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an explicit controller-independent ingress TLS profile and focused offline integration checks.
+
 - Reconcile September source (AKS Terraform unchanged); document network/DNS/egress/registry/identity/ILB readiness and clarify direct-Service versus controller-based ingress.
 
 - Public Azure AKS foundation derived from reviewed archived root/native module.

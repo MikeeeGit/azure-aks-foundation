@@ -23,6 +23,12 @@ output "workload_identities" {
     principal_id     = identity.principal_id
     tenant_id        = var.tenant_id
     service_accounts = var.workload_identities[key].service_accounts
+    federated_credentials = { for credential_key, credential in azurerm_federated_identity_credential.workload : credential_key => {
+      cluster  = local.federations[credential_key].cluster
+      issuer   = credential.issuer
+      subject  = credential.subject
+      audience = credential.audience
+    } if local.federations[credential_key].identity == key }
   } }
 }
 output "ingress_handoff" {

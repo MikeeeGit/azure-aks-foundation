@@ -24,3 +24,5 @@ Public CI uses isolated hosted workers without cloud authentication. Authenticat
 [Source review and changes](docs/source-provenance.md) records retained behavior and deliberate changes. This is a new deployment interface/state layout, not a drop-in migration of existing AVM state. Licensed under [Apache-2.0](LICENSE).
 
 Review the [infrastructure-to-application readiness handoff](docs/readiness.md) before creating nodes, deploying applications or selecting the candidate slot.
+
+Optional [ingress TLS profile](examples/ingress-tls/README.md) preserves workload identity, CSI certificate synchronization and gateway-to-controller HTTPS as an explicit path beside the simple direct-ILB demo.
