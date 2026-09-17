@@ -1,5 +1,7 @@
 # From an existing network to private AKS
 
+For the complete network/firewall/dual-AKS/Envoy/WAF trial, start with the [sandbox deployment runbook](https://github.com/MikeeeGit/terraform-delivery-templates/blob/main/docs/azure/sandbox-deployment.md). It also explains the retained pipeline method and additional Argo CD method.
+
 ## Prepare private configuration and state
 
 Clone/import the public source into a private deployment repository before adding real estate configuration or authenticated delivery. Use Terraform 1.16.3, Azure CLI, Python 3.10+, Git and a reviewed delivery-helper release. This root has a partial Azure AD backend; supply its actual account, container and key through `delivery.azure.json` and the helpers.

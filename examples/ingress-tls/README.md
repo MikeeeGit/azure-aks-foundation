@@ -2,7 +2,7 @@
 
 This optional profile supplies the infrastructure and certificate contract shared by the maintained Gateway API path and the historical ingress compatibility path. The simple direct-ILB demo remains separate. It adds one application managed identity, exact ServiceAccount federation for both selected cluster issuers, and Key Vault Secrets User on an existing application vault. It does not create a vault, certificate, gateway/controller or Kubernetes object.
 
-Apply the reviewed `workload.tfvars` after the root global and PPRD configuration. The map replaces `workload_identities`; merge any existing application identities explicitly before planning. For a single-cluster installation remove the unused slot from `clusters`. Replace the synthetic vault ID with your actual RBAC-enabled vault. The same dedicated application identity can serve both clusters; control-plane, kubelet, delivery and platform-service identities remain separate.
+For the explicit validation composition, load the reviewed `workload.tfvars` after the root global and PPRD configuration. For actual helper/pipeline delivery, merge its `workload_identities` map into the private target as explained below. For a single-cluster installation remove the unused slot from `clusters`. Replace the synthetic vault ID with your actual RBAC-enabled vault. The same dedicated application identity can serve both clusters; control-plane, kubelet, delivery and platform-service identities remain separate.
 
 ```bash
 terraform test -test-directory=tests/ingress-tls \
@@ -11,6 +11,12 @@ terraform test -test-directory=tests/ingress-tls \
 ```
 
 This command runs from the repository root with a mocked provider. For real changes use your private configuration and the reviewed saved-plan infrastructure workflow.
+
+## Use this profile with saved-plan delivery
+
+The local `tf_setup`/`tf_plan` helpers and authenticated component pipelines read **only** `config/global.tfvars`, followed by `config/<region>/<environment>/<environment>.tfvars`. They do not discover example files or accept `TF_CLI_ARGS`/`TF_VAR_*` overrides. The three-file command above is a credential-free validation composition.
+
+For an actual private deployment, merge the profile's complete `workload_identities` map into the selected private target tfvars before running the normal helper or component pipeline. Preserve unrelated identities, replace the existing assignment rather than duplicating it, and replace synthetic inputs. Terraform replaces map-valued inputs; it does not recursively merge separate tfvars maps. Commit/review the private configuration and inspect the saved plan for the intended identity, both slot federations and exact vault role. Keep old reviewed configuration for rollback; never substitute a different profile after approving a plan.
 
 ## Bind the applied identity
 
