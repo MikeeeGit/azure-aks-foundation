@@ -31,3 +31,12 @@ Annotate the ServiceAccount with `azure.workload.identity/client-id` using the a
 Install a maintained ingress implementation separately. Its Service uses `service.beta.kubernetes.io/azure-load-balancer-internal: "true"` and `service.beta.kubernetes.io/azure-load-balancer-ipv4` for a free address in the correct node subnet. A different internal subnet requires explicit configuration and identity permissions. Check NSGs, routes, probes and actual address allocation. See [internal load balancer guidance](https://learn.microsoft.com/en-us/azure/aks/internal-lb). [internal-service.yaml](../examples/kubernetes/internal-service.yaml) only illustrates the Service contract: adapt selectors/ports to a controller you have actually installed.
 
 Gateway health must be proved after ingress exists. Overlay pods are not gateway backend targets. ACR and Key Vault private endpoints independently require functioning DNS/network access; RBAC grants do not create that connectivity.
+
+
+## Integrated public sample
+
+The [platform demo](https://github.com/MikeeeGit/aks-platform-demo) deploys a namespaced application and an internal LoadBalancer Service to each cluster through [shared Kustomize delivery](https://github.com/MikeeeGit/aks-delivery-templates). Its Services use the reserved ingress_handoff addresses and can be Application Gateway backends directly. This one-app path needs no ingress controller. A general multi-application platform still needs its own maintained controller design.
+
+The full UK South configuration grants both kubelet identities pull access to the hub example ACR. Replace the synthetic registry ID with the applied hub acr_id and choose the pull role that matches its RBAC/ABAC mode. Application deploy identities need separate cluster-user and namespace-scoped permissions; they are not kubelet or workload identities.
+
+Use the deployment_context and clusters outputs with the [platform handoff helper](https://github.com/MikeeeGit/terraform-delivery-templates/blob/v0.3.0/scripts/azure/platform_handoff.py) to create reviewed application targets from actual cluster names. That helper exports metadata only and does not grant permissions or deploy workloads.

@@ -33,3 +33,14 @@ output "ingress_handoff" {
     created_by_this_stack = false
   } if c.ingress_private_ip != null }
 }
+
+output "deployment_context" {
+  description = "Non-secret target binding used when exporting application delivery configuration."
+  value = {
+    tenant_id       = var.tenant_id
+    subscription_id = var.subscription_id_map[var.subscription]
+    environment     = var.environment
+    region          = var.location_abbreviated
+    location        = var.location
+  }
+}

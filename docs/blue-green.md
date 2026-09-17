@@ -12,7 +12,7 @@
 
 ## Establish ingress and gateway health
 
-Install a maintained ingress/Gateway API controller on each slot, with an internal load balancer Service using an unused node-subnet IP. `ingress_private_ip` is only the desired handoff. Verify the Service actually gets that IP, endpoints are ready and the application answers at the expected port, hostname, path and TLS SNI.
+For the integrated single-application sample, deploy its internal LoadBalancer Service directly on each slot. A general multi-application platform can instead install a maintained ingress/Gateway API controller with its own internal Service. In either case use an unused node-subnet IP. `ingress_private_ip` is only the desired handoff. Verify the Service actually gets that IP, endpoints are ready and the application answers at the expected port, hostname, path and TLS SNI.
 
 Pre-production examples use `10.81.0.20` and `10.81.4.20`. Application Gateway in the separate `appgateway` subnet can use these reachable ingress addresses. Match backend protocol/port, probe path, Host header, certificate trust and timeouts. Never use overlay pod CIDRs or the AKS private API endpoint as app backends. Validate health through the gateway's real network path before selecting a candidate backend.
 
@@ -29,3 +29,5 @@ Monitor errors, latency, saturation, failed jobs, secret/identity failures and d
 Restore the previously verified traffic target for rollback and recheck health. Traffic reversal does not undo incompatible database migrations; retain a separately tested data recovery plan. Preserve evidence and useful data while investigating.
 
 After the rollback window, prove the old slot receives no traffic or scheduled work. Migrate/retain its stateful data and backups, remove that slot from workload federation `clusters` sets, then remove only that key from the Terraform `clusters` map. Review its destruction plan and apply through protected delivery. The surviving slot's key/IDs stay stable. Retain shared network/DNS/backend resources until all consumers are gone.
+
+Use the [readiness handoff](readiness.md) before candidate deployment and traffic selection. A historical deployment or successful mock plan does not prove current Azure or application health.

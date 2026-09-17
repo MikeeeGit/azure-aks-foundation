@@ -22,3 +22,5 @@ Development is pinned to Terraform 1.16.3 and AzureRM 4.81.0. Configuration cons
 Public CI uses isolated hosted workers without cloud authentication. Authenticated delivery belongs in a trusted private consumer using [Terraform Delivery Templates](https://github.com/MikeeeGit/terraform-delivery-templates), reviewed OIDC identities and environment approvals. Never attach Azure credentials or persistent trusted runners to public pull-request validation.
 
 [Source review and changes](docs/source-provenance.md) records retained behavior and deliberate changes. This is a new deployment interface/state layout, not a drop-in migration of existing AVM state. Licensed under [Apache-2.0](LICENSE).
+
+Review the [infrastructure-to-application readiness handoff](docs/readiness.md) before creating nodes, deploying applications or selecting the candidate slot.

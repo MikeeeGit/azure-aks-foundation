@@ -63,3 +63,11 @@ clusters = {
   }
 }
 private_dns_zone_id = "/subscriptions/00000000-0000-0000-0000-000000000002/resourceGroups/uks-hub-vnet-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.uksouth.azmk8s.io"
+
+# Same reviewed hub ACR used by the sample build and both cluster kubelets.
+acr_registries = {
+  platform = {
+    id        = "/subscriptions/00000000-0000-0000-0000-000000000002/resourceGroups/uks-hub-netw-rg-01/providers/Microsoft.ContainerRegistry/registries/exampleplatformacr"
+    pull_role = "AcrPull"
+  }
+}

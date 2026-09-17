@@ -1,6 +1,6 @@
 # Source review and deliberate public changes
 
-Sources reviewed were the top-level `AZ-TF-aks/` and `AZ-TF-MOD-aks/` entries in the author's March 2026 repository archive. The archive remains unchanged. No original Git history, organization tfvars, credentials, kubeconfigs, application settings or private estate identifiers were copied.
+Sources reviewed were the top-level `AZ-TF-aks/` and `AZ-TF-MOD-aks/` entries in the author's repository archive, reconciled against the 17 September 2026 update. The archive remains unchanged. No original Git history, organization tfvars, credentials, kubeconfigs, application settings or private estate identifiers were copied.
 
 The archived root actually calls `Azure/avm-res-containerservice-managedcluster/azurerm` 0.1.7 twice (`main.tf:521` and `:730`). Its README claims it uses the standalone `AZ-TF-MOD-aks`, but the root does not reference that module. The actual root uses CNI Overlay with Cilium; the standalone native module uses Calico (`main.tf:94`). This public root preserves the actual deployed-root Cilium configuration. A consumer of the old standalone Calico module must separately review network-policy compatibility and migration; this is not an implicit in-place conversion.
 
@@ -29,3 +29,7 @@ Ubuntu is the supported node OS in this release. The archive left OS SKU unset. 
 The self-contained native AzureRM child avoids the archived AVM dependency graph. AVM 0.1.7 required Terraform >=1.9.2 despite the archived root declaring >=1.8. Native resources change state addresses, identities and interfaces. **Do not point this configuration at archived AVM state or treat it as an in-place upgrade.** Existing deployments need a separately reviewed import/migration plan and full state backup, or a new candidate deployment followed by controlled application migration. No automated state migration is supplied.
 
 Scope remains infrastructure configuration and delivery integration. It does not deploy apps/databases/ingress, perform gateway traffic changes, replicate recovery data or prove production readiness. Those require explicit operational work. Public mock tests do not establish live cloud or application outcomes.
+
+## September source reconciliation
+
+The updated AKS root and native child Terraform are byte-identical to the previously reviewed source. Updated readiness notes describe historical private-estate operations, not qualification of these public configurations. The public design continues to preserve both cluster slots, independent app identity federation, private API/registry/CSI paths and separate gateway cutover. The [readiness handoff](readiness.md) makes those external dependencies explicit without copying private application names, live-state claims or restoration estimates.
