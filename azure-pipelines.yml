@@ -54,3 +54,12 @@ jobs:
       jobName: Example_1
       directory: modules/cluster
       testDirectory: tests
+  - template: azure-pipelines/jobs/terraform-validate.yml@deliveryTemplates
+    parameters:
+      jobName: IngressTlsWorkload
+      directory: .
+      testDirectory: tests/ingress-tls
+      varFiles: |
+        config/global.tfvars
+        config/uks/pprd/pprd.tfvars
+        examples/ingress-tls/workload.tfvars
