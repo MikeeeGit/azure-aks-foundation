@@ -26,3 +26,7 @@ Public CI uses isolated hosted workers without cloud authentication. Authenticat
 Review the [infrastructure-to-application readiness handoff](docs/readiness.md) before creating nodes, deploying applications or selecting the candidate slot.
 
 Optional [ingress TLS profile](examples/ingress-tls/README.md) preserves workload identity, CSI certificate synchronization and gateway-to-controller HTTPS as an explicit path beside the simple direct-ILB demo.
+
+## CI change scope
+
+Markdown-only edits use lightweight required GitHub checks and are excluded from automatic Azure validation builds. Changes to Terraform, application code, scripts, workflow definitions or executable examples still run full validation, including examples stored under docs/. Mixed changes also run full validation. Manual GitHub runs and unknown Git comparison ranges default to full validation.
