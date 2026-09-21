@@ -21,7 +21,7 @@ The root is a deployment stack; `modules/cluster` is its native single-cluster i
 
 This release accepts Ubuntu OS to keep the AzureRM 4.33 compatibility contract honest. Explicit AzureLinux3 requires a newer provider API/validation contract and is not accepted here.
 
-Each cluster needs a Kubernetes version, subnet key, pod/service CIDRs, DNS service IP, system pool and at least one user pool. Both `min_count`/`max_count` enable autoscaling; omit both for a fixed `node_count`. VM size, zones, max pods, disks, labels and taints are independent by pool. Fixed counts are not hidden by lifecycle ignores. The system pool admits critical add-ons; use user pools for applications. Optional `autoscaler_profile` preserves the original cluster-level tuning. NodeImage upgrades stay enabled; Kubernetes versions are reviewed inputs. Upgrade defaults are 30-minute drain, 5-minute soak and 10% surge.
+Each cluster needs a Kubernetes version, subnet key, pod/service CIDRs, DNS service IP, system pool and normally at least one user pool. Both `min_count`/`max_count` enable autoscaling; omit both for a fixed `node_count`. VM size, zones, max pods, disks, labels and taints are independent by pool. Fixed counts are not hidden by lifecycle ignores. The system pool admits critical add-ons by default; use user pools for applications. The explicit `system_pool.only_critical_addons_enabled = false` opt-in permits application scheduling on system nodes and allows an empty user-pool map for a [disposable lab](../examples/disposable-lab/README.md). Optional `autoscaler_profile` preserves the original cluster-level tuning. NodeImage upgrades stay enabled; Kubernetes versions are reviewed inputs. Upgrade defaults are 30-minute drain, 5-minute soak and 10% surge.
 
 `outbound_type` accepts `loadBalancer` or `userDefinedRouting`. UDR also needs `route_table_id` and `udr_egress_ready`. An optional `ingress_private_ip` must be usable in that slot's node subnet; it is metadata, not an allocated address.
 
@@ -43,10 +43,12 @@ The selected spoke state must expose `vnet_id`, `vnet.address_space`, `subnet_id
 
 Outputs contain no kubeconfig:
 
-- `clusters`: name, ID, RG, private FQDN, issuer URL, control-plane identity ID, kubelet IDs, node RG, subnet and requested version per slot.
+- `clusters`: name, ID, RG, private FQDN, issuer URL, control-plane identity ID, kubelet IDs, node RG, subnet, requested version, actual system-pool settings, user-pool count and AKS tier per slot.
 - `workload_identities`: per-app client/principal/resource IDs, tenant, service-account/federation bindings and applied Azure role-assignment scope/name metadata. These identifiers are not secrets.
 - `delivery_authorization`: selected authorizer, applied CI principal scopes, administrator groups and Cluster User assignments; see [authorization](ci-identity-and-authorization.md).
 - `ingress_handoff`: desired private IP/subnet with `created_by_this_stack = false`; consume only after ingress exists and is healthy.
 - `resource_group_name`: stack-owned AKS/application-identity resource group.
 
 Checks reject overlapping cluster ranges, declared network overlap, wrong node-subnet/VNet membership, invalid DNS/ingress addresses and duplicate slot subnets. They cannot discover omitted external ranges, occupied IPs, absent DNS links, live routes, firewall policies or Azure capacity. Verify these separately.
+
+The active examples use at least two system nodes (three for production), a system autoscaler minimum of at least two, and illustrative D4 sizes. Confirm the current [system-pool requirements](https://learn.microsoft.com/en-us/azure/aks/use-system-pools), VM availability and quota before provisioning. The ordinary PPRD pair now starts six D4 nodes (four system and two application nodes): 24 vCPUs, rising to 36 at the declared autoscaler maxima, before surge and private workers. The explicit mixed-system lab profile starts 16 vCPUs instead.

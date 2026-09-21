@@ -67,3 +67,13 @@ jobs:
         config/global.tfvars
         config/uks/pprd/pprd.tfvars
         examples/ingress-tls/workload.tfvars
+
+  - template: azure-pipelines/jobs/terraform-validate.yml@deliveryTemplates
+    parameters:
+      jobName: DisposableDualAksLab
+      directory: .
+      testDirectory: tests/disposable-lab
+      varFiles: |
+        config/global.tfvars
+        config/uks/pprd/pprd.tfvars
+        examples/disposable-lab/clusters.tfvars

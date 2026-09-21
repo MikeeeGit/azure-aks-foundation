@@ -50,14 +50,15 @@ variable "cluster" {
     sku_tier           = optional(string, "Standard")
     os_sku             = optional(string, "Ubuntu")
     system_pool = object({
-      vm_size                 = string
-      node_count              = optional(number, 3)
-      min_count               = optional(number)
-      max_count               = optional(number)
-      max_pods                = optional(number, 30)
-      os_disk_size_gb         = optional(number, 128)
-      zones                   = optional(set(string), ["1", "2", "3"])
-      host_encryption_enabled = optional(bool, true)
+      vm_size                      = string
+      node_count                   = optional(number, 3)
+      min_count                    = optional(number)
+      max_count                    = optional(number)
+      max_pods                     = optional(number, 30)
+      os_disk_size_gb              = optional(number, 128)
+      zones                        = optional(set(string), ["1", "2", "3"])
+      host_encryption_enabled      = optional(bool, true)
+      only_critical_addons_enabled = optional(bool, true)
     })
     user_pools = map(object({
       vm_size                 = string
@@ -99,8 +100,8 @@ variable "cluster" {
     error_message = "This release supports Ubuntu OS and Free/Standard AKS tiers across the declared provider range."
   }
   validation {
-    condition     = length(var.cluster.user_pools) > 0 && alltrue([for key in keys(var.cluster.user_pools) : can(regex("^[a-z][a-z0-9]{0,10}$", key)) && key != "systemnp"])
-    error_message = "Provide at least one user pool with a distinct lowercase alphanumeric name of 1-11 characters."
+    condition     = (length(var.cluster.user_pools) > 0 || !var.cluster.system_pool.only_critical_addons_enabled) && alltrue([for key in keys(var.cluster.user_pools) : can(regex("^[a-z][a-z0-9]{0,10}$", key)) && key != "systemnp"])
+    error_message = "Dedicated system pools require at least one user pool. Only an explicit only_critical_addons_enabled=false permits no user pools; names must be distinct lowercase alphanumeric identifiers of 1-11 characters."
   }
   validation {
     condition = alltrue([for pool in concat([var.cluster.system_pool], values(var.cluster.user_pools)) :

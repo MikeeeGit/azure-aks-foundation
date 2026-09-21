@@ -122,14 +122,15 @@ variable "clusters" {
     sku_tier           = optional(string, "Standard")
     os_sku             = optional(string, "Ubuntu")
     system_pool = object({
-      vm_size                 = string
-      node_count              = optional(number, 3)
-      min_count               = optional(number)
-      max_count               = optional(number)
-      max_pods                = optional(number, 30)
-      os_disk_size_gb         = optional(number, 128)
-      zones                   = optional(set(string), ["1", "2", "3"])
-      host_encryption_enabled = optional(bool, true)
+      vm_size                      = string
+      node_count                   = optional(number, 3)
+      min_count                    = optional(number)
+      max_count                    = optional(number)
+      max_pods                     = optional(number, 30)
+      os_disk_size_gb              = optional(number, 128)
+      zones                        = optional(set(string), ["1", "2", "3"])
+      host_encryption_enabled      = optional(bool, true)
+      only_critical_addons_enabled = optional(bool, true)
     })
     user_pools = map(object({
       vm_size                 = string

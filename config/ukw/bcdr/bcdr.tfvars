@@ -26,7 +26,7 @@ clusters = {
     "ingress_private_ip" = "10.91.0.20"
     "system_pool" = {
       "vm_size"    = "Standard_D4s_v5"
-      "node_count" = 1
+      "node_count" = 2
       "zones"      = []
     }
     "user_pools" = {

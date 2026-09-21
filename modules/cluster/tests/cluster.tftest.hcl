@@ -49,6 +49,11 @@ variables {
 run "private_security" {
   command = plan
   assert {
+    condition     = azurerm_kubernetes_cluster.this.default_node_pool[0].only_critical_addons_enabled && azurerm_kubernetes_cluster.this.default_node_pool[0].host_encryption_enabled
+    error_message = "Dedicated system scheduling and host encryption must remain enabled by default."
+  }
+
+  assert {
     condition     = azurerm_kubernetes_cluster.this.private_cluster_enabled && !azurerm_kubernetes_cluster.this.private_cluster_public_fqdn_enabled && azurerm_kubernetes_cluster.this.local_account_disabled && !azurerm_kubernetes_cluster.this.run_command_enabled
     error_message = "Private Entra-only control-plane access must remain the default."
   }
@@ -248,4 +253,51 @@ run "native_authorization_keeps_entra_private_access" {
     length(azurerm_role_assignment.cluster_admin) == 0)
     error_message = "Native authorization changes the API authorizer only; Entra, private access, workload identity and local-account protections must remain."
   }
+}
+
+
+run "disposable_lab_shared_system_pool" {
+  command = plan
+  variables {
+    cluster = {
+      kubernetes_version = "1.35"
+      subnet_key         = "aks01"
+      pod_cidr           = "172.20.0.0/16"
+      service_cidr       = "172.22.0.0/20"
+      dns_service_ip     = "172.22.0.10"
+      sku_tier           = "Free"
+      system_pool = {
+        vm_size                      = "Standard_D4s_v4"
+        node_count                   = 2
+        only_critical_addons_enabled = false
+      }
+      user_pools = {}
+    }
+  }
+  assert {
+    condition     = !azurerm_kubernetes_cluster.this.default_node_pool[0].only_critical_addons_enabled && azurerm_kubernetes_cluster.this.default_node_pool[0].node_count == 2 && length(azurerm_kubernetes_cluster_node_pool.user) == 0
+    error_message = "Only the explicit disposable profile may share its two-node system pool without user pools."
+  }
+  assert {
+    condition     = output.system_pool.vm_size == "Standard_D4s_v4" && output.system_pool.max_surge == "10%" && output.system_pool.host_encryption_enabled && output.sku_tier == "Free"
+    error_message = "Expose the actual lab capacity and retain surge/encryption defaults."
+  }
+}
+run "reject_dedicated_system_without_user_pool" {
+  command = plan
+  variables {
+    cluster = {
+      kubernetes_version = "1.35"
+      subnet_key         = "aks01"
+      pod_cidr           = "172.20.0.0/16"
+      service_cidr       = "172.22.0.0/20"
+      dns_service_ip     = "172.22.0.10"
+      system_pool = {
+        vm_size    = "Standard_D4s_v4"
+        node_count = 2
+      }
+      user_pools = {}
+    }
+  }
+  expect_failures = [var.cluster]
 }

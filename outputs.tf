@@ -14,6 +14,9 @@ output "clusters" {
     subnet_id                 = local.network.subnet_ids[var.clusters[key].subnet_key]
     subnet_cidr               = local.network.subnet_address_prefixes[var.clusters[key].subnet_key]
     kubernetes_version        = var.clusters[key].kubernetes_version
+    system_pool               = cluster.system_pool
+    user_pool_count           = cluster.user_pool_count
+    sku_tier                  = cluster.sku_tier
   } }
 }
 output "workload_identities" {

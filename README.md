@@ -32,3 +32,5 @@ Optional [ingress TLS profile](examples/ingress-tls/README.md) preserves workloa
 ## CI change scope
 
 Markdown-only edits use lightweight required GitHub checks and are excluded from automatic Azure validation builds. Changes to Terraform, application code, scripts, workflow definitions or executable examples still run full validation, including examples stored under docs/. Mixed changes also run full validation. Manual GitHub runs and unknown Git comparison ranges default to full validation.
+
+For a disposable capacity rehearsal, see the optional [dual-AKS lab profile](examples/disposable-lab/README.md). It explicitly shares system pools with the demo workloads; standard inputs retain dedicated system pools.

@@ -97,7 +97,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     os_disk_size_gb              = var.cluster.system_pool.os_disk_size_gb
     os_sku                       = var.cluster.os_sku
     zones                        = var.cluster.system_pool.zones
-    only_critical_addons_enabled = true
+    only_critical_addons_enabled = var.cluster.system_pool.only_critical_addons_enabled
     node_public_ip_enabled       = false
     host_encryption_enabled      = var.cluster.system_pool.host_encryption_enabled
     temporary_name_for_rotation  = "systemrot"

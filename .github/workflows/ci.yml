@@ -75,3 +75,15 @@ jobs:
         config/global.tfvars
         config/uks/pprd/pprd.tfvars
         examples/ingress-tls/workload.tfvars
+
+  disposable-lab:
+    name: Disposable dual-AKS lab
+    uses: MikeeeGit/terraform-delivery-templates/.github/workflows/terraform-validate.yml@281d779aced9c6e7da082b5e57c85639dc1858df
+    with:
+      template-ref: 281d779aced9c6e7da082b5e57c85639dc1858df
+      directory: .
+      test-directory: tests/disposable-lab
+      var-files: |
+        config/global.tfvars
+        config/uks/pprd/pprd.tfvars
+        examples/disposable-lab/clusters.tfvars

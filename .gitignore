@@ -14,6 +14,7 @@ plan.out
 !config/uks/pprd/pprd.tfvars
 !config/uks/prd/prd.tfvars
 !config/ukw/bcdr/bcdr.tfvars
+!examples/disposable-lab/clusters.tfvars
 backend*.hcl
 .backend*.hcl
 *.auto.tfvars
