@@ -23,6 +23,12 @@ output "workload_identities" {
     principal_id     = identity.principal_id
     tenant_id        = var.tenant_id
     service_accounts = var.workload_identities[key].service_accounts
+    role_assignments = { for assignment_key, assignment in azurerm_role_assignment.workload : assignment_key => {
+      id                   = assignment.id
+      principal_id         = assignment.principal_id
+      scope                = assignment.scope
+      role_definition_name = assignment.role_definition_name
+    } if local.workload_roles[assignment_key].identity == key }
     federated_credentials = { for credential_key, credential in azurerm_federated_identity_credential.workload : credential_key => {
       cluster  = local.federations[credential_key].cluster
       issuer   = credential.issuer
@@ -49,4 +55,28 @@ output "deployment_context" {
     region          = var.location_abbreviated
     location        = var.location
   }
+}
+
+output "delivery_authorization" {
+  description = "Applied non-secret CI principal and authorization bindings for the platform/bootstrap tier. Kubernetes usernames must be discovered under each real CI login, not guessed from UUIDs."
+  value = {
+    mode                   = var.kubernetes_authorization_mode
+    admin_group_object_ids = var.entra_admin_group_object_ids
+    principals             = var.delivery_principals
+    targets = {
+      for slot, cluster in module.cluster : slot => {
+        cluster_id          = cluster.id
+        cluster_name        = cluster.name
+        resource_group_name = azurerm_resource_group.aks.name
+      }
+    }
+    cluster_user_assignments = {
+      for key, assignment in azurerm_role_assignment.delivery_cluster_user : key => {
+        id           = assignment.id
+        principal_id = assignment.principal_id
+        cluster_id   = assignment.scope
+      }
+    }
+  }
+  depends_on = [azurerm_role_assignment.delivery_cluster_user, azurerm_role_assignment.native_admin_cluster_user]
 }

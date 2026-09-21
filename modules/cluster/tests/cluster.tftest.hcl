@@ -229,3 +229,23 @@ run "reject_unsupported_os" {
   }
   expect_failures = [var.cluster]
 }
+
+run "native_authorization_keeps_entra_private_access" {
+  command = plan
+  variables {
+    kubernetes_authorization_mode = "kubernetes_rbac"
+    entra_admin_group_object_ids  = ["00000000-0000-0000-0000-000000000031"]
+  }
+  assert {
+    condition = (!azurerm_kubernetes_cluster.this.azure_active_directory_role_based_access_control[0].azure_rbac_enabled &&
+      toset(azurerm_kubernetes_cluster.this.azure_active_directory_role_based_access_control[0].admin_group_object_ids) == toset(["00000000-0000-0000-0000-000000000031"]) &&
+      azurerm_kubernetes_cluster.this.azure_active_directory_role_based_access_control[0].tenant_id == var.tenant_id &&
+      azurerm_kubernetes_cluster.this.local_account_disabled &&
+      !azurerm_kubernetes_cluster.this.run_command_enabled &&
+      azurerm_kubernetes_cluster.this.private_cluster_enabled &&
+      azurerm_kubernetes_cluster.this.oidc_issuer_enabled &&
+      azurerm_kubernetes_cluster.this.workload_identity_enabled &&
+    length(azurerm_role_assignment.cluster_admin) == 0)
+    error_message = "Native authorization changes the API authorizer only; Entra, private access, workload identity and local-account protections must remain."
+  }
+}

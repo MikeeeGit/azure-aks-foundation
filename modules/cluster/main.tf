@@ -69,8 +69,9 @@ resource "azurerm_kubernetes_cluster" "this" {
     user_assigned_identity_id = azurerm_user_assigned_identity.kubelet.id
   }
   azure_active_directory_role_based_access_control {
-    tenant_id          = var.tenant_id
-    azure_rbac_enabled = true
+    tenant_id              = var.tenant_id
+    azure_rbac_enabled     = var.kubernetes_authorization_mode == "azure_rbac"
+    admin_group_object_ids = var.kubernetes_authorization_mode == "kubernetes_rbac" ? var.entra_admin_group_object_ids : null
   }
   network_profile {
     network_plugin      = "azure"

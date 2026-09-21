@@ -1,0 +1,21 @@
+# Merge these values into one private environment target.
+# Replace all UUIDs with applied identity outputs and reviewed Entra group IDs.
+kubernetes_authorization_mode = "kubernetes_rbac"
+entra_admin_group_object_ids  = ["00000000-0000-0000-0000-000000000031"]
+cluster_admin_principal_ids   = {}
+
+delivery_principals = {
+  platform = {
+    client_id    = "00000000-0000-0000-0000-000000000011"
+    principal_id = "00000000-0000-0000-0000-000000000012"
+    purpose      = "platform"
+    clusters     = ["aks01", "aks02"]
+  }
+  application = {
+    client_id    = "00000000-0000-0000-0000-000000000021"
+    principal_id = "00000000-0000-0000-0000-000000000022"
+    purpose      = "application"
+    namespaces   = ["platform-demo"]
+    clusters     = ["aks01", "aks02"]
+  }
+}

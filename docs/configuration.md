@@ -11,7 +11,10 @@ The root is a deployment stack; `modules/cluster` is its native single-cluster i
 | `connected_address_spaces` | Additional hub/peer/on-premises CIDRs for overlap checks |
 | `private_dns_zone_id` | `System` or existing regional AKS private DNS resource ID |
 | `clusters` | One/two independent stable slots (`aks01`, `aks02`) |
-| `cluster_admin_principal_ids` | Friendly keys to Entra object IDs; prefer groups |
+| `cluster_admin_principal_ids` | Explicit Azure RBAC cluster administrators; empty in native Kubernetes mode |
+| `kubernetes_authorization_mode` | `azure_rbac` default or explicit `kubernetes_rbac` |
+| `entra_admin_group_object_ids` | Native-mode Entra administrator groups for first bootstrap/recovery |
+| `delivery_principals` | Applied CI client/object IDs, purpose, namespaces and selected slots; Cluster User grants only |
 | `acr_registries` | Registry ID and the kubelet pull role matching its permission mode |
 | `log_analytics_workspace_id` | Optional existing workspace for OMS and diagnostics |
 | `workload_identities` | Dedicated app identities, Kubernetes subjects and Azure role scopes |
@@ -41,7 +44,8 @@ The selected spoke state must expose `vnet_id`, `vnet.address_space`, `subnet_id
 Outputs contain no kubeconfig:
 
 - `clusters`: name, ID, RG, private FQDN, issuer URL, control-plane identity ID, kubelet IDs, node RG, subnet and requested version per slot.
-- `workload_identities`: per-app client/principal/resource IDs, tenant and service-account bindings. These identifiers are not secrets.
+- `workload_identities`: per-app client/principal/resource IDs, tenant, service-account/federation bindings and applied Azure role-assignment scope/name metadata. These identifiers are not secrets.
+- `delivery_authorization`: selected authorizer, applied CI principal scopes, administrator groups and Cluster User assignments; see [authorization](ci-identity-and-authorization.md).
 - `ingress_handoff`: desired private IP/subnet with `created_by_this_stack = false`; consume only after ingress exists and is healthy.
 - `resource_group_name`: stack-owned AKS/application-identity resource group.
 

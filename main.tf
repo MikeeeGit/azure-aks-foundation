@@ -32,21 +32,23 @@ resource "azurerm_resource_group" "aks" {
   tags     = local.tags
 }
 module "cluster" {
-  for_each                    = var.clusters
-  source                      = "./modules/cluster"
-  name                        = "${local.prefix}-${each.key}"
-  resource_group_name         = azurerm_resource_group.aks.name
-  location                    = var.location
-  tenant_id                   = var.tenant_id
-  cluster                     = each.value
-  vnet_id                     = local.network.vnet_id
-  subnet_id                   = try(local.network.subnet_ids[each.value.subnet_key], "")
-  private_dns_zone_id         = var.private_dns_zone_id
-  log_analytics_workspace_id  = var.log_analytics_workspace_id
-  cluster_admin_principal_ids = var.cluster_admin_principal_ids
-  acr_registries              = var.acr_registries
-  tags                        = local.tags
-  depends_on                  = [terraform_data.network_contract, terraform_data.delivery_contract]
+  for_each                      = var.clusters
+  source                        = "./modules/cluster"
+  name                          = "${local.prefix}-${each.key}"
+  resource_group_name           = azurerm_resource_group.aks.name
+  location                      = var.location
+  tenant_id                     = var.tenant_id
+  cluster                       = each.value
+  vnet_id                       = local.network.vnet_id
+  subnet_id                     = try(local.network.subnet_ids[each.value.subnet_key], "")
+  private_dns_zone_id           = var.private_dns_zone_id
+  log_analytics_workspace_id    = var.log_analytics_workspace_id
+  cluster_admin_principal_ids   = var.cluster_admin_principal_ids
+  kubernetes_authorization_mode = var.kubernetes_authorization_mode
+  entra_admin_group_object_ids  = var.entra_admin_group_object_ids
+  acr_registries                = var.acr_registries
+  tags                          = local.tags
+  depends_on                    = [terraform_data.network_contract, terraform_data.delivery_contract]
 }
 resource "azurerm_user_assigned_identity" "workload" {
   for_each            = var.workload_identities

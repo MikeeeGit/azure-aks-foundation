@@ -30,4 +30,8 @@ run "workload_tls_federation" {
     condition     = azurerm_role_assignment.workload["platform-demo/tls-secret"].role_definition_name == "Key Vault Secrets User" && endswith(azurerm_role_assignment.workload["platform-demo/tls-secret"].scope, "/vaults/example-platform-app")
     error_message = "TLS workload access must target the existing application vault, separate from control-plane roles."
   }
+  assert {
+    condition     = length(output.workload_identities["platform-demo"].role_assignments) == 1 && output.workload_identities["platform-demo"].role_assignments["platform-demo/tls-secret"].role_definition_name == "Key Vault Secrets User" && endswith(output.workload_identities["platform-demo"].role_assignments["platform-demo/tls-secret"].scope, "/vaults/example-platform-app")
+    error_message = "The applied workload handoff must expose exact role/scope metadata for Azure qualification."
+  }
 }

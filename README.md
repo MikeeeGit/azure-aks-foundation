@@ -2,7 +2,7 @@
 
 Terraform for one or two private Azure Kubernetes Service clusters in an existing Azure network. Stable slots `aks01` and `aks02` support independent Kubernetes versions and node pools so applications can move between clusters during upgrades. This public version preserves the core design of the author's archived `AZ-TF-aks` configuration with synthetic configuration and explicit dependencies.
 
-Each cluster uses Azure CNI Overlay with Cilium, Entra authentication and Azure RBAC, OIDC/workload identity, dedicated control-plane and kubelet identities, Linux system/user pools, Key Vault CSI secret rotation and optional Log Analytics diagnostics. Application permissions belong to separate workload identities. No kubeconfig or administrator credentials are exported.
+Each cluster uses Azure CNI Overlay with Cilium, Entra authentication with Azure RBAC by default or an explicit native Kubernetes RBAC profile, OIDC/workload identity, dedicated control-plane and kubelet identities, Linux system/user pools, Key Vault CSI secret rotation and optional Log Analytics diagnostics. Application permissions belong to separate workload identities. No kubeconfig or administrator credentials are exported.
 
 The stack creates AKS resources, identities and scoped role assignments. An existing network, state backend, optional shared private DNS, ACR and monitoring workspace are inputs. Applications, ingress controllers, load balancer Services, Application Gateway, DNS traffic records and application cutover are separate operational layers. The `ingress_handoff` output describes requested ingress addresses; it does not claim those addresses exist.
 
@@ -24,6 +24,8 @@ Public CI uses isolated hosted workers without cloud authentication. Authenticat
 [Source review and changes](docs/source-provenance.md) records retained behavior and deliberate changes. This is a new deployment interface/state layout, not a drop-in migration of existing AVM state. Licensed under [Apache-2.0](LICENSE).
 
 Review the [infrastructure-to-application readiness handoff](docs/readiness.md) before creating nodes, deploying applications or selecting the candidate slot.
+
+See [CI identity and Kubernetes authorization](docs/ci-identity-and-authorization.md) for Terraform-managed delivery access, separate workload federation and the native RBAC option.
 
 Optional [ingress TLS profile](examples/ingress-tls/README.md) preserves workload identity, CSI certificate synchronization and gateway-to-controller HTTPS as an explicit path beside the simple direct-ILB demo.
 

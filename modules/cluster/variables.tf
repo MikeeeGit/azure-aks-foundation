@@ -110,3 +110,30 @@ variable "cluster" {
     error_message = "Pool sizes must be positive integers. Configure both min/max to enable autoscaling; max_pods must be 10-250."
   }
 }
+
+variable "kubernetes_authorization_mode" {
+  description = "Azure RBAC remains the default. kubernetes_rbac uses managed Entra authentication and platform-owned native Kubernetes bindings."
+  type        = string
+  default     = "azure_rbac"
+  validation {
+    condition     = (contains(["azure_rbac", "kubernetes_rbac"], var.kubernetes_authorization_mode))
+    error_message = "Choose azure_rbac or kubernetes_rbac explicitly."
+  }
+  validation {
+    condition     = (var.kubernetes_authorization_mode != "kubernetes_rbac" || length(var.cluster_admin_principal_ids) == 0)
+    error_message = "Native Kubernetes authorization must use entra_admin_group_object_ids and managed Kubernetes bindings; remove Azure RBAC cluster_admin_principal_ids."
+  }
+}
+variable "entra_admin_group_object_ids" {
+  description = "Explicit Entra security group object IDs for first native-RBAC bootstrap and recovery. Required only for kubernetes_rbac; these groups have cluster administrator rights."
+  type        = set(string)
+  default     = []
+  validation {
+    condition     = (alltrue([for id in var.entra_admin_group_object_ids : can(regex("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$", id))]))
+    error_message = "Provide Entra group object UUIDs."
+  }
+  validation {
+    condition     = (var.kubernetes_authorization_mode == "kubernetes_rbac" ? length(var.entra_admin_group_object_ids) > 0 : length(var.entra_admin_group_object_ids) == 0)
+    error_message = "Native Kubernetes authorization requires an explicit admin group; Azure RBAC uses cluster_admin_principal_ids instead."
+  }
+}

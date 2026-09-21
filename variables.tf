@@ -199,3 +199,66 @@ variable "workload_identities" {
     error_message = "An identity supports at most 20 federated identity credentials."
   }
 }
+
+variable "kubernetes_authorization_mode" {
+  description = "Azure RBAC remains the default. kubernetes_rbac uses managed Entra authentication and platform-owned native Kubernetes bindings."
+  type        = string
+  default     = "azure_rbac"
+  validation {
+    condition     = (contains(["azure_rbac", "kubernetes_rbac"], var.kubernetes_authorization_mode))
+    error_message = "Choose azure_rbac or kubernetes_rbac explicitly."
+  }
+  validation {
+    condition     = (var.kubernetes_authorization_mode != "kubernetes_rbac" || length(var.cluster_admin_principal_ids) == 0)
+    error_message = "Native Kubernetes authorization must use entra_admin_group_object_ids and managed Kubernetes bindings; remove Azure RBAC cluster_admin_principal_ids."
+  }
+}
+variable "entra_admin_group_object_ids" {
+  description = "Explicit Entra security group object IDs for first native-RBAC bootstrap and recovery. Required only for kubernetes_rbac; these groups have cluster administrator rights."
+  type        = set(string)
+  default     = []
+  validation {
+    condition     = (alltrue([for id in var.entra_admin_group_object_ids : can(regex("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$", id))]))
+    error_message = "Provide Entra group object UUIDs."
+  }
+  validation {
+    condition     = (var.kubernetes_authorization_mode == "kubernetes_rbac" ? length(var.entra_admin_group_object_ids) > 0 : length(var.entra_admin_group_object_ids) == 0)
+    error_message = "Native Kubernetes authorization requires an explicit admin group; Azure RBAC uses cluster_admin_principal_ids instead."
+  }
+}
+
+variable "delivery_principals" {
+  description = "Applied CI identity outputs, separate from workload identities. Terraform owns Cluster User grants only. Kubernetes API permissions are separately provisioned through the selected authorization model."
+  type = map(object({
+    client_id    = string
+    principal_id = string
+    purpose      = string
+    namespaces   = optional(set(string), [])
+    clusters     = set(string)
+  }))
+  default = {}
+  validation {
+    condition = (alltrue([for key, identity in var.delivery_principals :
+      can(regex("^[a-z][a-z0-9-]{0,39}$", key)) &&
+      can(regex("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$", identity.client_id)) &&
+      can(regex("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$", identity.principal_id)) &&
+      lower(identity.client_id) != lower(identity.principal_id) &&
+      contains(["platform", "application"], identity.purpose)
+    ]))
+    error_message = "Use stable delivery keys, distinct client/principal UUIDs and purpose platform or application."
+  }
+  validation {
+    condition = (length(distinct([for identity in var.delivery_principals : lower(identity.client_id)])) == length(var.delivery_principals) &&
+    length(distinct([for identity in var.delivery_principals : lower(identity.principal_id)])) == length(var.delivery_principals))
+    error_message = "Each delivery principal must have a distinct client and object ID; platform and application identities must not be shared."
+  }
+  validation {
+    condition = (alltrue([for identity in var.delivery_principals :
+      length(identity.clusters) > 0 &&
+      alltrue([for slot in identity.clusters : contains(keys(var.clusters), slot)]) &&
+      (identity.purpose == "application" ? length(identity.namespaces) > 0 : length(identity.namespaces) == 0) &&
+      alltrue([for namespace in identity.namespaces : can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", namespace)) && !contains(["default", "kube-system", "kube-public", "kube-node-lease", "envoy-gateway-system", "argocd"], namespace)])
+    ]))
+    error_message = "Select enabled cluster slots. Application identities require explicit application namespaces; platform principals are cluster-scoped. Reserved platform namespaces are not application targets."
+  }
+}

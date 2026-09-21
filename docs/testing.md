@@ -16,7 +16,7 @@ for target in uks/dev uks/pprd uks/prd ukw/bcdr; do
 done
 ```
 
-Tests cover private API/local accounts, Cilium, OIDC/CSI/RBAC, independent versions/subnets, fixed/autoscaled pools, route-table/DNS/registry roles, monitoring, federation, target-binding drift and invalid IP ranges. AzureRM 4.81 and the declared minimum 4.33 are tested with the pinned CLI. Public GitHub/Azure Pipelines use isolated hosted workers and the shared validation entrypoint, including the child and each layered target.
+Tests cover private API/local accounts, Cilium, OIDC/CSI/RBAC, independent versions/subnets, fixed/autoscaled pools, route-table/DNS/registry roles, monitoring, federation, target-binding drift and invalid IP ranges. Additional access tests cover the unchanged Azure RBAC default, explicit native-mode administrator groups, private/Entra security preservation, distinct platform/app identities, selected-slot Cluster User grants, namespace restrictions and applied authorization metadata. AzureRM 4.81 and the declared minimum 4.33 are tested with the pinned CLI. Public GitHub/Azure Pipelines use isolated hosted workers and the shared validation entrypoint, including the child and each layered target.
 
 Mocks prove Terraform evaluation and selected invariants. They do not prove regional Kubernetes/VM availability, API acceptance, role propagation, private DNS/routing, actual network policy, ACR/vault reachability or application health/cutover. A separately approved private deployment must verify these. AzureRM 4.81 warns that FIC `resource_group_name` is deprecated; it is retained for the 4.33 compatibility contract and can be removed with a deliberate future minimum-version change.
 

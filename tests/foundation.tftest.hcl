@@ -435,3 +435,98 @@ run "reject_subscription_map_drift" {
   }
   expect_failures = [terraform_data.delivery_contract]
 }
+
+run "delivery_default_does_not_grant_app_admin" {
+  command = plan
+  variables {
+    delivery_principals = {
+      platform = { client_id = "00000000-0000-0000-0000-000000000011", principal_id = "00000000-0000-0000-0000-000000000012", purpose = "platform", clusters = ["aks01", "aks02"] }
+      app      = { client_id = "00000000-0000-0000-0000-000000000021", principal_id = "00000000-0000-0000-0000-000000000022", purpose = "application", clusters = ["aks01", "aks02"], namespaces = ["platform-demo"] }
+    }
+  }
+  assert {
+    condition = (output.delivery_authorization.mode == "azure_rbac" &&
+      length(azurerm_role_assignment.delivery_cluster_user) == 4 &&
+      length(azurerm_role_assignment.native_admin_cluster_user) == 0 &&
+    alltrue([for grant in azurerm_role_assignment.delivery_cluster_user : grant.role_definition_name == "Azure Kubernetes Service Cluster User Role"]))
+    error_message = "Both identities need Cluster User on both slots; new delivery assignments must not grant Kubernetes API administrator rights."
+  }
+}
+run "native_delivery_grants_and_handoff" {
+  command = plan
+  variables {
+    kubernetes_authorization_mode = "kubernetes_rbac"
+    entra_admin_group_object_ids  = ["00000000-0000-0000-0000-000000000031"]
+    delivery_principals = {
+      platform = { client_id = "00000000-0000-0000-0000-000000000011", principal_id = "00000000-0000-0000-0000-000000000012", purpose = "platform", clusters = ["aks01", "aks02"] }
+      app      = { client_id = "00000000-0000-0000-0000-000000000021", principal_id = "00000000-0000-0000-0000-000000000022", purpose = "application", clusters = ["aks02"], namespaces = ["platform-demo"] }
+    }
+  }
+  assert {
+    condition = (length(azurerm_role_assignment.delivery_cluster_user) == 3 &&
+      length(azurerm_role_assignment.native_admin_cluster_user) == 2 &&
+      alltrue([for grant in azurerm_role_assignment.delivery_cluster_user : grant.role_definition_name == "Azure Kubernetes Service Cluster User Role"]) &&
+    alltrue([for grant in azurerm_role_assignment.native_admin_cluster_user : grant.principal_type == "Group"]))
+    error_message = "Native mode must grant credential retrieval only, preserve selected slots and provide explicit first-bootstrap group access."
+  }
+  assert {
+    condition = (output.delivery_authorization.mode == "kubernetes_rbac" &&
+      output.delivery_authorization.principals["app"].client_id == "00000000-0000-0000-0000-000000000021" &&
+      output.delivery_authorization.principals["app"].principal_id == "00000000-0000-0000-0000-000000000022" &&
+      output.delivery_authorization.principals["app"].namespaces == toset(["platform-demo"]) &&
+      output.delivery_authorization.principals["app"].clusters == toset(["aks02"]) &&
+    length(output.delivery_authorization.targets) == 2)
+    error_message = "The platform handoff must retain exact identities, namespace and slot scope without inventing Kubernetes usernames."
+  }
+}
+run "reject_native_without_recovery_group" {
+  command = plan
+  variables { kubernetes_authorization_mode = "kubernetes_rbac" }
+  expect_failures = [var.entra_admin_group_object_ids]
+}
+run "reject_native_azure_admin_grants" {
+  command = plan
+  variables {
+    kubernetes_authorization_mode = "kubernetes_rbac"
+    entra_admin_group_object_ids  = ["00000000-0000-0000-0000-000000000031"]
+    cluster_admin_principal_ids   = { misleading = "00000000-0000-0000-0000-000000000032" }
+  }
+  expect_failures = [var.kubernetes_authorization_mode]
+}
+run "reject_shared_platform_app_identity" {
+  command = plan
+  variables {
+    delivery_principals = {
+      platform = { client_id = "00000000-0000-0000-0000-000000000011", principal_id = "00000000-0000-0000-0000-000000000012", purpose = "platform", clusters = ["aks01"] }
+      app      = { client_id = "00000000-0000-0000-0000-000000000011", principal_id = "00000000-0000-0000-0000-000000000012", purpose = "application", clusters = ["aks01"], namespaces = ["platform-demo"] }
+    }
+  }
+  expect_failures = [var.delivery_principals]
+}
+run "reject_invalid_delivery_identifier" {
+  command = plan
+  variables {
+    delivery_principals = {
+      app = { client_id = "not-a-uuid", principal_id = "00000000-0000-0000-0000-000000000022", purpose = "application", clusters = ["aks01"], namespaces = ["platform-demo"] }
+    }
+  }
+  expect_failures = [var.delivery_principals]
+}
+run "reject_unknown_delivery_slot" {
+  command = plan
+  variables {
+    delivery_principals = {
+      app = { client_id = "00000000-0000-0000-0000-000000000021", principal_id = "00000000-0000-0000-0000-000000000022", purpose = "application", clusters = ["aks03"], namespaces = ["platform-demo"] }
+    }
+  }
+  expect_failures = [var.delivery_principals]
+}
+run "reject_platform_namespace_application" {
+  command = plan
+  variables {
+    delivery_principals = {
+      app = { client_id = "00000000-0000-0000-0000-000000000021", principal_id = "00000000-0000-0000-0000-000000000022", purpose = "application", clusters = ["aks01"], namespaces = ["envoy-gateway-system"] }
+    }
+  }
+  expect_failures = [var.delivery_principals]
+}
